@@ -1,20 +1,21 @@
 package app.userservice.controller;
 
+import app.userservice.dto.CreateUserRequest;
 import app.userservice.dto.PagedResponse;
 import app.userservice.dto.UserResponseDto;
 import app.userservice.model.User;
 import app.userservice.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/v1/users")
@@ -42,6 +43,14 @@ public class UserController {
         );
 
         return ResponseEntity.ok(response);
+    }
+
+    @PostMapping
+    @Operation(summary = "Create a new user", description = "Creates a new user with the provided information")
+    public ResponseEntity<UserResponseDto> createUser(@Valid @RequestBody CreateUserRequest request) {
+        User user = userService.createUser(request);
+        UserResponseDto response = mapToUserResponseDto(user);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     private UserResponseDto mapToUserResponseDto(User user) {
