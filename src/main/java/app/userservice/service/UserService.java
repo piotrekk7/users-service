@@ -1,6 +1,7 @@
 package app.userservice.service;
 
 import app.userservice.dto.CreateUserRequest;
+import app.userservice.dto.UpdateUserRequest;
 import app.userservice.exception.DuplicateEmailException;
 import app.userservice.exception.EntityNotFoundException;
 import app.userservice.model.Role;
@@ -15,6 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -55,5 +57,34 @@ public class UserService {
         user.setRole(role);
 
         return userRepository.save(user);
+    }
+
+    @Transactional
+    public User updateUser(Long id, UpdateUserRequest request) {
+        User user = userRepository.findById(id)
+            .orElseThrow(() -> new EntityNotFoundException("User not found with id: " + id));
+
+        userRepository.findByEmail(request.getEmail())
+            .filter(existingUser -> !existingUser.getId().equals(id))
+            .ifPresent(existingUser -> {
+                throw new DuplicateEmailException("Email already in use: " + request.getEmail());
+            });
+
+        Role role = roleRepository.findById(request.getRoleId())
+            .orElseThrow(() -> new IllegalArgumentException("Role not found with id: " + request.getRoleId()));
+
+        user.setEmail(request.getEmail());
+        user.setFirstName(request.getFirstName());
+        user.setLastName(request.getLastName());
+        user.setRole(role);
+
+        return userRepository.save(user);
+    }
+
+    @Transactional
+    public void deleteUser(Long id) {
+        User user = userRepository.findById(id)
+            .orElseThrow(() -> new EntityNotFoundException("User not found with id: " + id));
+        userRepository.delete(user);
     }
 }

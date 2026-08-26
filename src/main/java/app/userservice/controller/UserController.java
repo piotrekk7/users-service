@@ -2,6 +2,7 @@ package app.userservice.controller;
 
 import app.userservice.dto.CreateUserRequest;
 import app.userservice.dto.PagedResponse;
+import app.userservice.dto.UpdateUserRequest;
 import app.userservice.dto.UserResponseDto;
 import app.userservice.model.User;
 import app.userservice.service.UserService;
@@ -60,6 +61,23 @@ public class UserController {
         User user = userService.createUser(request);
         UserResponseDto response = mapToUserResponseDto(user);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @PutMapping("/{id}")
+    @Operation(summary = "Update a user", description = "Updates an existing user with the provided information")
+    public ResponseEntity<UserResponseDto> updateUser(
+            @PathVariable Long id,
+            @Valid @RequestBody UpdateUserRequest request) {
+        User user = userService.updateUser(id, request);
+        UserResponseDto response = mapToUserResponseDto(user);
+        return ResponseEntity.ok(response);
+    }
+
+    @DeleteMapping("/{id}")
+    @Operation(summary = "Delete a user", description = "Deletes a user by their ID")
+    public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
+        userService.deleteUser(id);
+        return ResponseEntity.noContent().build();
     }
 
     private UserResponseDto mapToUserResponseDto(User user) {
