@@ -1,0 +1,35 @@
+spring:
+  application:
+    name: user-service-test
+
+  datasource:
+    url: jdbc:h2:mem:testdb
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.H2Dialect
+
+  liquibase:
+    enabled: false
+
+  h2:
+    console:
+      enabled: false
+
+logging:
+  level:
+    app.userservice: DEBUG
+    org.springframework.security: INFO
+    org.hibernate.SQL: DEBUG
+
+jwt:
+  secret: test-secret-key-that-is-long-enough-for-hmac-sha256-algorithm-minimum-256-bits
+  expiration-ms: 86400000
