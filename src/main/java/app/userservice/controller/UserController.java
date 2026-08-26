@@ -26,11 +26,12 @@ public class UserController {
     private final UserService userService;
 
     @GetMapping
-    @Operation(summary = "Get paginated list of users", description = "Returns a paginated list of all users")
+    @Operation(summary = "Get paginated list of users", description = "Returns a paginated list of all users, optionally filtered by email")
     public ResponseEntity<PagedResponse<UserResponseDto>> getUsers(
             @PageableDefault(size = 10, sort = "email", direction = Sort.Direction.ASC)
-            Pageable pageable) {
-        Page<User> usersPage = userService.getUsers(pageable);
+            Pageable pageable,
+            @RequestParam(required = false) String email) {
+        Page<User> usersPage = userService.getUsers(pageable, email);
 
         PagedResponse<UserResponseDto> response = new PagedResponse<>(
             usersPage.getContent().stream()
@@ -42,6 +43,14 @@ public class UserController {
             usersPage.getSize()
         );
 
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/{id}")
+    @Operation(summary = "Get user by ID", description = "Returns a single user by their ID or 404 if not found")
+    public ResponseEntity<UserResponseDto> getUserById(@PathVariable Long id) {
+        User user = userService.getUserById(id);
+        UserResponseDto response = mapToUserResponseDto(user);
         return ResponseEntity.ok(response);
     }
 
