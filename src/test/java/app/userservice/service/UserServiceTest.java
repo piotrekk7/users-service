@@ -1,5 +1,6 @@
 package app.userservice.service;
 
+import app.userservice.dto.CreateUserRequest;
 import app.userservice.dto.UpdateUserRequest;
 import app.userservice.exception.DuplicateEmailException;
 import app.userservice.exception.EntityNotFoundException;
@@ -14,6 +15,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.*;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -31,6 +33,9 @@ class UserServiceTest {
 
     @Mock
     private RoleRepository roleRepository;
+
+    @Mock
+    private PasswordEncoder passwordEncoder;
 
     @InjectMocks
     private UserService userService;
@@ -57,6 +62,84 @@ class UserServiceTest {
         testUser.setPassword("hashedPassword");
         testUser.setRole(userRole);
         testUser.setCreatedAt(LocalDateTime.now());
+    }
+
+    @Test
+    void createUser_ShouldCreateUser_WhenValidRequest() {
+        CreateUserRequest request = new CreateUserRequest();
+        request.setEmail("newuser@example.com");
+        request.setPassword("password123");
+        request.setFirstName("Jane");
+        request.setLastName("Smith");
+        request.setRoleId(2L);
+
+        User newUser = new User();
+        newUser.setId(2L);
+        newUser.setEmail("newuser@example.com");
+        newUser.setPassword("hashedPassword");
+        newUser.setFirstName("Jane");
+        newUser.setLastName("Smith");
+        newUser.setRole(userRole);
+
+        when(userRepository.existsByEmail("newuser@example.com")).thenReturn(false);
+        when(roleRepository.findById(2L)).thenReturn(Optional.of(userRole));
+        when(passwordEncoder.encode("password123")).thenReturn("hashedPassword");
+        when(userRepository.save(any(User.class))).thenReturn(newUser);
+
+        User result = userService.createUser(request);
+
+        assertThat(result).isNotNull();
+        assertThat(result.getEmail()).isEqualTo("newuser@example.com");
+        assertThat(result.getFirstName()).isEqualTo("Jane");
+        assertThat(result.getLastName()).isEqualTo("Smith");
+        assertThat(result.getPassword()).isEqualTo("hashedPassword");
+        assertThat(result.getRole().getName()).isEqualTo("USER");
+        verify(userRepository).existsByEmail("newuser@example.com");
+        verify(roleRepository).findById(2L);
+        verify(passwordEncoder).encode("password123");
+        verify(userRepository).save(any(User.class));
+    }
+
+    @Test
+    void createUser_ShouldThrowDuplicateEmailException_WhenEmailAlreadyExists() {
+        CreateUserRequest request = new CreateUserRequest();
+        request.setEmail("test@example.com");
+        request.setPassword("password123");
+        request.setFirstName("John");
+        request.setLastName("Doe");
+        request.setRoleId(2L);
+
+        when(userRepository.existsByEmail("test@example.com")).thenReturn(true);
+
+        assertThatThrownBy(() -> userService.createUser(request))
+            .isInstanceOf(DuplicateEmailException.class)
+            .hasMessage("Email already in use: test@example.com");
+
+        verify(userRepository).existsByEmail("test@example.com");
+        verify(roleRepository, never()).findById(anyLong());
+        verify(passwordEncoder, never()).encode(anyString());
+        verify(userRepository, never()).save(any(User.class));
+    }
+
+    @Test
+    void createUser_ShouldThrowIllegalArgumentException_WhenRoleDoesNotExist() {
+        CreateUserRequest request = new CreateUserRequest();
+        request.setEmail("newuser@example.com");
+        request.setPassword("password123");
+        request.setFirstName("Jane");
+        request.setLastName("Smith");
+        request.setRoleId(999L);
+
+        when(userRepository.existsByEmail("newuser@example.com")).thenReturn(false);
+        when(roleRepository.findById(999L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> userService.createUser(request))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("Role not found with id: 999");
+
+        verify(userRepository).existsByEmail("newuser@example.com");
+        verify(roleRepository).findById(999L);
+        verify(userRepository, never()).save(any(User.class));
     }
 
     @Test
