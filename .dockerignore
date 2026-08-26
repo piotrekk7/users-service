@@ -1,0 +1,40 @@
+# Maven build artifacts
+target/
+!target/users-demo-1.0-SNAPSHOT.jar
+
+# Git
+.git/
+.gitignore
+
+# IDE
+.idea/
+.vscode/
+*.iml
+*.iws
+*.ipr
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Documentation
+docs/
+*.md
+!README.md
+
+# Environment files
+.env
+.env.local
+
+# Docker files (no need to copy these into the image)
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# Test files
+src/test/
+
+# Maven wrapper (we use Maven from the base image)
+.mvn/
+mvnw
+mvnw.cmd
