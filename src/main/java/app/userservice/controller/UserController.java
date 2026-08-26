@@ -16,6 +16,8 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -27,6 +29,7 @@ public class UserController {
     private final UserService userService;
 
     @GetMapping
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Get paginated list of users", description = "Returns a paginated list of all users, optionally filtered by email")
     public ResponseEntity<PagedResponse<UserResponseDto>> getUsers(
             @PageableDefault(size = 10, sort = "email", direction = Sort.Direction.ASC)
@@ -48,6 +51,7 @@ public class UserController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Get user by ID", description = "Returns a single user by their ID or 404 if not found")
     public ResponseEntity<UserResponseDto> getUserById(@PathVariable Long id) {
         User user = userService.getUserById(id);
@@ -55,7 +59,17 @@ public class UserController {
         return ResponseEntity.ok(response);
     }
 
+    @GetMapping("/me")
+    @Operation(summary = "Get current user profile", description = "Returns the profile of the currently authenticated user")
+    public ResponseEntity<UserResponseDto> getCurrentUser(Authentication authentication) {
+        Long userId = Long.parseLong(authentication.getName());
+        User user = userService.getUserById(userId);
+        UserResponseDto response = mapToUserResponseDto(user);
+        return ResponseEntity.ok(response);
+    }
+
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Create a new user", description = "Creates a new user with the provided information")
     public ResponseEntity<UserResponseDto> createUser(@Valid @RequestBody CreateUserRequest request) {
         User user = userService.createUser(request);
@@ -64,6 +78,7 @@ public class UserController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Update a user", description = "Updates an existing user with the provided information")
     public ResponseEntity<UserResponseDto> updateUser(
             @PathVariable Long id,
@@ -74,6 +89,7 @@ public class UserController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Delete a user", description = "Deletes a user by their ID")
     public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
         userService.deleteUser(id);
