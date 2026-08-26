@@ -17,7 +17,6 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -60,10 +59,10 @@ public class UserController {
     }
 
     @GetMapping("/me")
+    @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Get current user profile", description = "Returns the profile of the currently authenticated user")
-    public ResponseEntity<UserResponseDto> getCurrentUser(Authentication authentication) {
-        Long userId = Long.parseLong(authentication.getName());
-        User user = userService.getUserById(userId);
+    public ResponseEntity<UserResponseDto> getCurrentUser() {
+        User user = userService.getCurrentUser();
         UserResponseDto response = mapToUserResponseDto(user);
         return ResponseEntity.ok(response);
     }
