@@ -1,5 +1,8 @@
 # Stage 1: Build stage
-FROM maven:3.9.9-eclipse-temurin-25-alpine AS build
+FROM eclipse-temurin:25-jdk-alpine AS build
+
+# Install Maven
+RUN apk add --no-cache maven
 
 WORKDIR /app
 

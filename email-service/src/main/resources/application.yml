@@ -32,6 +32,10 @@ management:
     health:
       show-details: always
 
+app:
+  email:
+    from: ${EMAIL_FROM:noreply@emailservice.app}
+
 logging:
   level:
     app.emailservice: DEBUG
