@@ -43,6 +43,5 @@ build/
 logs/
 *.log
 
-### Scratch & Docs ###
-.scratch/
+### Docs ###
 docs/

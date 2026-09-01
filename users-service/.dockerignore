@@ -1,6 +1,6 @@
 # Maven build artifacts
 target/
-!target/users-demo-1.0-SNAPSHOT.jar
+!target/users-service-1.0-SNAPSHOT.jar
 
 # Git
 .git/
