@@ -3,6 +3,7 @@ package app.userservice.service;
 import app.userservice.dto.AuthResponse;
 import app.userservice.dto.LoginRequest;
 import app.userservice.dto.RegisterRequest;
+import app.userservice.event.UserRegisteredEvent;
 import app.userservice.exception.DuplicateEmailException;
 import app.userservice.model.Role;
 import app.userservice.model.User;
@@ -23,6 +24,7 @@ public class AuthService {
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
+    private final UserEventPublisher userEventPublisher;
 
     @Transactional
     public AuthResponse register(RegisterRequest request) {
@@ -42,6 +44,13 @@ public class AuthService {
 
         User savedUser = userRepository.save(user);
         String token = jwtTokenProvider.generateToken(savedUser);
+
+        UserRegisteredEvent event = new UserRegisteredEvent(
+                savedUser.getEmail(),
+                savedUser.getFirstName() + " " + savedUser.getLastName(),
+                savedUser.getCreatedAt()
+        );
+        userEventPublisher.publishUserRegisteredEvent(event);
 
         return new AuthResponse(token);
     }
