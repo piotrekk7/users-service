@@ -36,6 +36,8 @@ docker-compose up --build
 # Email service health: http://localhost:8081/actuator/health
 # RabbitMQ Management UI: http://localhost:15672 (guest/guest)
 # MailHog Web UI: http://localhost:8025
+# Kafka UI: http://localhost:9090
+# Mongo Express: http://localhost:8083
 ```
 
 ## Infrastructure
@@ -43,15 +45,24 @@ docker-compose up --build
 - **PostgreSQL** (port 5433) - database for users-service
 - **RabbitMQ** (ports 5672, 15672) - message broker
 - **MailHog** (ports 1025, 8025) - test SMTP server
+- **Kafka** (port 9092) - event streaming platform (KRaft mode, no Zookeeper)
+- **Kafka UI** (port 9090) - web interface for Kafka topics
+- **MongoDB** (port 27017) - database for audit-service (auditdb)
+- **Mongo Express** (port 8083) - web interface for MongoDB
 
 ## Event-Driven Architecture
 
 ```
 users-service --[UserRegisteredEvent]--> RabbitMQ --[email.user.registered]--> email-service
                                           (topic: user.events)
+
+users-service --[AuditEvent]--> Kafka --[audit.events]--> (future: audit-service)
+                                 (3 partitions, 30 days retention)
 ```
 
 After user registration (`POST /api/v1/auth/register`), users-service publishes an event to RabbitMQ, and email-service automatically sends a welcome email.
+
+Kafka infrastructure is prepared for the future audit-service that will consume audit events and store them in MongoDB.
 
 ## Development
 
