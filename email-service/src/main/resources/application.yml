@@ -7,6 +7,15 @@ spring:
     port: ${RABBITMQ_PORT:5672}
     username: ${RABBITMQ_USER:guest}
     password: ${RABBITMQ_PASSWORD:guest}
+    listener:
+      simple:
+        retry:
+          enabled: true
+          initial-interval: 1000
+          multiplier: 5.0
+          max-interval: 15000
+          max-attempts: 4
+          stateless: true
 
   mail:
     host: ${MAIL_HOST:localhost}
@@ -39,4 +48,6 @@ app:
 logging:
   level:
     app.emailservice: DEBUG
-    org.springframework.amqp: INFO
+    org.springframework.amqp: DEBUG
+    org.springframework.retry: DEBUG
+    org.springframework.amqp.rabbit.retry: DEBUG

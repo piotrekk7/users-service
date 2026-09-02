@@ -33,7 +33,8 @@ public class EmailService {
             mailSender.send(message);
             log.info("Welcome email sent successfully to: {}", event.getEmail());
         } catch (Exception e) {
-            log.error("Failed to send welcome email to: {}", event.getEmail(), e);
+            log.warn("Failed to send welcome email to: {}. Error: {}. Message will be retried.",
+                    event.getEmail(), e.getMessage());
             throw new RuntimeException("Failed to send email", e);
         }
     }
