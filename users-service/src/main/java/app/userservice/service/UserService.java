@@ -1,5 +1,9 @@
 package app.userservice.service;
 
+import app.userservice.audit.AuditAction;
+import app.userservice.audit.AuditEventPublisher;
+import app.userservice.audit.RequestContextExtractor;
+import app.userservice.dto.AuditEvent;
 import app.userservice.dto.CreateUserRequest;
 import app.userservice.dto.UpdateUserRequest;
 import app.userservice.exception.DuplicateEmailException;
@@ -29,6 +33,8 @@ public class UserService {
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
+    private final AuditEventPublisher auditEventPublisher;
+    private final RequestContextExtractor requestContextExtractor;
 
     public Page<User> getUsers(Pageable pageable, String email) {
         if (email != null && !email.isBlank()) {
@@ -88,7 +94,9 @@ public class UserService {
         user.setLastName(request.getLastName());
         user.setRole(role);
 
-        return userRepository.save(user);
+        User updatedUser = userRepository.save(user);
+        publishAuditEvent(updatedUser.getId().toString(), AuditAction.USER_UPDATED);
+        return updatedUser;
     }
 
     @Transactional
@@ -96,5 +104,21 @@ public class UserService {
         User user = userRepository.findById(id)
             .orElseThrow(() -> new EntityNotFoundException("User not found with id: " + id));
         userRepository.delete(user);
+        publishAuditEvent(user.getId().toString(), AuditAction.USER_DELETED);
+    }
+
+    private void publishAuditEvent(String userId, AuditAction action) {
+        AuditEvent auditEvent = AuditEvent.builder()
+                .userId(userId)
+                .action(action.name())
+                .ipAddress(requestContextExtractor.getIpAddress())
+                .userAgent(requestContextExtractor.getUserAgent())
+                .requestDetails(AuditEvent.RequestDetails.builder()
+                        .endpoint(requestContextExtractor.getRequestUri())
+                        .method(requestContextExtractor.getRequestMethod())
+                        .build())
+                .build();
+
+        auditEventPublisher.publishAuditEvent(auditEvent);
     }
 }

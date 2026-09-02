@@ -1,5 +1,9 @@
 package app.userservice.service;
 
+import app.userservice.audit.AuditAction;
+import app.userservice.audit.AuditEventPublisher;
+import app.userservice.audit.RequestContextExtractor;
+import app.userservice.dto.AuditEvent;
 import app.userservice.dto.AuthResponse;
 import app.userservice.dto.LoginRequest;
 import app.userservice.dto.RegisterRequest;
@@ -25,6 +29,8 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
     private final UserEventPublisher userEventPublisher;
+    private final AuditEventPublisher auditEventPublisher;
+    private final RequestContextExtractor requestContextExtractor;
 
     @Transactional
     public AuthResponse register(RegisterRequest request) {
@@ -52,19 +58,41 @@ public class AuthService {
         );
         userEventPublisher.publishUserRegisteredEvent(event);
 
+        publishAuditEvent(savedUser.getId().toString(), AuditAction.USER_REGISTERED);
+
         return new AuthResponse(token);
     }
 
     @Transactional(readOnly = true)
     public AuthResponse login(LoginRequest request) {
         User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new BadCredentialsException("Invalid email or password"));
+                .orElseThrow(() -> {
+                    publishAuditEvent("unknown", AuditAction.USER_LOGIN_FAILED);
+                    return new BadCredentialsException("Invalid email or password");
+                });
 
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+            publishAuditEvent(user.getId().toString(), AuditAction.USER_LOGIN_FAILED);
             throw new BadCredentialsException("Invalid email or password");
         }
 
         String token = jwtTokenProvider.generateToken(user);
+        publishAuditEvent(user.getId().toString(), AuditAction.USER_LOGIN_SUCCESS);
         return new AuthResponse(token);
+    }
+
+    private void publishAuditEvent(String userId, AuditAction action) {
+        AuditEvent auditEvent = AuditEvent.builder()
+                .userId(userId)
+                .action(action.name())
+                .ipAddress(requestContextExtractor.getIpAddress())
+                .userAgent(requestContextExtractor.getUserAgent())
+                .requestDetails(AuditEvent.RequestDetails.builder()
+                        .endpoint(requestContextExtractor.getRequestUri())
+                        .method(requestContextExtractor.getRequestMethod())
+                        .build())
+                .build();
+
+        auditEventPublisher.publishAuditEvent(auditEvent);
     }
 }

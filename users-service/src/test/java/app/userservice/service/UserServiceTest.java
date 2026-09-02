@@ -1,5 +1,7 @@
 package app.userservice.service;
 
+import app.userservice.audit.AuditEventPublisher;
+import app.userservice.audit.RequestContextExtractor;
 import app.userservice.dto.CreateUserRequest;
 import app.userservice.dto.UpdateUserRequest;
 import app.userservice.exception.DuplicateEmailException;
@@ -36,6 +38,12 @@ class UserServiceTest {
 
     @Mock
     private PasswordEncoder passwordEncoder;
+
+    @Mock
+    private AuditEventPublisher auditEventPublisher;
+
+    @Mock
+    private RequestContextExtractor requestContextExtractor;
 
     @InjectMocks
     private UserService userService;

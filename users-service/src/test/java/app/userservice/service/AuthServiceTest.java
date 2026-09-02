@@ -1,5 +1,7 @@
 package app.userservice.service;
 
+import app.userservice.audit.AuditEventPublisher;
+import app.userservice.audit.RequestContextExtractor;
 import app.userservice.dto.AuthResponse;
 import app.userservice.dto.LoginRequest;
 import app.userservice.dto.RegisterRequest;
@@ -39,6 +41,15 @@ class AuthServiceTest {
 
     @Mock
     private JwtTokenProvider jwtTokenProvider;
+
+    @Mock
+    private UserEventPublisher userEventPublisher;
+
+    @Mock
+    private AuditEventPublisher auditEventPublisher;
+
+    @Mock
+    private RequestContextExtractor requestContextExtractor;
 
     @InjectMocks
     private AuthService authService;
