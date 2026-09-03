@@ -1,0 +1,13 @@
+spring:
+  kafka:
+    bootstrap-servers: ${spring.kafka.bootstrap-servers}
+  data:
+    mongodb:
+      uri: ${spring.data.mongodb.uri}
+
+logging:
+  level:
+    app.auditservice: DEBUG
+    org.springframework.kafka: WARN
+    org.springframework.data.mongodb: WARN
+    org.testcontainers: WARN
