@@ -1,0 +1,11 @@
+@if (user$ | async; as user) {
+  <div class="panel">
+    <h1>Panel użytkownika</h1>
+    <div class="field"><span class="label">Imię:</span> {{ user.firstName }}</div>
+    <div class="field"><span class="label">Nazwisko:</span> {{ user.lastName }}</div>
+    <div class="field"><span class="label">Email:</span> {{ user.email }}</div>
+    <div class="field"><span class="label">Rola:</span> {{ user.role }}</div>
+  </div>
+} @else {
+  <p>Ładowanie danych...</p>
+}

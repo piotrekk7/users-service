@@ -1,0 +1,22 @@
+.panel {
+  max-width: 480px;
+  margin: 48px auto;
+  padding: 32px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+
+  h1 {
+    margin-bottom: 24px;
+    font-size: 1.5rem;
+  }
+
+  .field {
+    margin-bottom: 12px;
+    font-size: 1rem;
+
+    .label {
+      font-weight: 600;
+      margin-right: 8px;
+    }
+  }
+}
