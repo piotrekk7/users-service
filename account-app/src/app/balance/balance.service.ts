@@ -8,7 +8,7 @@ export interface BalanceEvent {
 
 @Injectable({ providedIn: 'root' })
 export class BalanceService {
-  private readonly SSE_URL = 'http://localhost:8084/balance/stream';
+  private readonly SSE_URL = '/balance/stream';
 
   events(): Observable<BalanceEvent> {
     return new Observable<BalanceEvent>((observer) => {

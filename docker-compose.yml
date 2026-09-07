@@ -219,6 +219,30 @@ services:
         condition: service_healthy
     restart: unless-stopped
 
+  balance-service:
+    build:
+      context: ./balance-service
+      dockerfile: Dockerfile
+    container_name: balance-service
+    ports:
+      - "8084:8084"
+    networks:
+      - microservices-network
+    restart: unless-stopped
+
+  account-app:
+    build:
+      context: ./account-app
+      dockerfile: Dockerfile
+    container_name: account-app
+    ports:
+      - "4200:80"
+    networks:
+      - microservices-network
+    depends_on:
+      - balance-service
+    restart: unless-stopped
+
 networks:
   microservices-network:
     driver: bridge
