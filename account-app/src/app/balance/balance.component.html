@@ -1,0 +1,22 @@
+<div class="balance-container">
+  <h1>Live Balances</h1>
+  <table>
+    <thead>
+      <tr>
+        <th>Account ID</th>
+        <th>Balance</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (account of accounts(); track account.accountId) {
+        <tr>
+          <td>{{ account.accountId }}</td>
+          <td>{{ account.balance | number: '1.2-2' }}</td>
+        </tr>
+      }
+    </tbody>
+  </table>
+  @if (accounts().length === 0) {
+    <p class="waiting">Waiting for data...</p>
+  }
+</div>
