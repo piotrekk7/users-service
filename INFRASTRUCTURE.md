@@ -25,16 +25,59 @@ The `docker-compose.yml` orchestrates the following services:
    - Web UI: `8025`
    - Web interface: http://localhost:8025
 
-### Application Services
-4. **users-service** - User management API
-   - Port: `8080`
-   - Build context: `./users-service`
-   - Depends on: postgres, rabbitmq
+4. **Kafka 7.6.0 (KRaft mode)** - Event streaming
+   - PLAINTEXT port: `9092`
+   - Topic: `audit.events` (3 partitions), `audit.events.dlq`
 
-5. **email-service** - Email notification service
-   - Port: `8081`
-   - Build context: `./email-service`
-   - Depends on: rabbitmq, mailhog
+5. **Kafka UI** - Kafka management console
+   - Port: `9090`
+   - Web interface: http://localhost:9090
+
+6. **MongoDB 7** - Database for audit-service
+   - Port: `27017`
+   - Database: `auditdb`
+
+7. **Mongo Express** - MongoDB admin UI
+   - Port: `8083`
+   - Web interface: http://localhost:8083
+
+8. **PostGIS 16 (geoserver-db)** - Spatial database for GeoServer
+   - Host port: `5434`
+   - Container port: `5432`
+   - Database: `geodata`
+   - User: `geouser`
+   - Password: `geopassword`
+
+9. **GeoServer 2.25.2** - OGC map server (WMS/WFS)
+   - Host port: `8085`
+   - Web UI: http://localhost:8085/geoserver/web
+   - Credentials: `admin` / `geoserver`
+   - Data directory persisted via named volume `geoserver-data`
+
+### Application Services
+10. **users-service** - User management API
+    - Port: `8080`
+    - Build context: `./users-service`
+    - Depends on: postgres, rabbitmq
+
+11. **email-service** - Email notification service
+    - Port: `8081`
+    - Build context: `./email-service`
+    - Depends on: rabbitmq, mailhog
+
+12. **audit-service** - Audit log service (Kafka consumer)
+    - Port: `8082`
+    - Build context: `./audit-service`
+    - Depends on: kafka, mongodb
+
+13. **balance-service** - Balance / SSE streaming service
+    - Port: `8084`
+    - Build context: `./balance-service`
+
+14. **account-app** - Angular frontend
+    - Host port: `4200`
+    - Build context: `./account-app`
+    - Depends on: balance-service
 
 ## Network
 
@@ -42,9 +85,13 @@ All services are connected via a Docker bridge network named `microservices-netw
 
 ## Data Persistence
 
-Two named volumes ensure data persistence:
-- `postgres-data` - PostgreSQL database files
+Named volumes:
+- `postgres-data` - PostgreSQL database files (usersdb)
 - `rabbitmq-data` - RabbitMQ message store
+- `kafka-data` - Kafka log segments
+- `mongodb-data` - MongoDB audit data
+- `geoserver-db-data` - PostGIS geodata database files
+- `geoserver-data` - GeoServer configuration and layer definitions
 
 ## Health Checks
 
@@ -59,6 +106,19 @@ Two named volumes ensure data persistence:
 - Interval: 10s
 - Timeout: 5s
 - Retries: 5
+
+### geoserver-db (PostGIS)
+- Command: `pg_isready -U geouser -d geodata`
+- Interval: 10s
+- Timeout: 5s
+- Retries: 5
+
+### GeoServer
+- Command: HTTP 200 on `http://localhost:8080/geoserver/web/`
+- Interval: 30s
+- Timeout: 10s
+- Retries: 5
+- Start period: 60s
 
 ## Quick Start
 

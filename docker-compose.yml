@@ -243,6 +243,50 @@ services:
       - balance-service
     restart: unless-stopped
 
+  geoserver-db:
+    image: postgis/postgis:16-3.4-alpine
+    container_name: users-geoserver-db
+    environment:
+      POSTGRES_DB: geodata
+      POSTGRES_USER: geouser
+      POSTGRES_PASSWORD: geopassword
+    ports:
+      - "5434:5432"
+    volumes:
+      - geoserver-db-data:/var/lib/postgresql/data
+    networks:
+      - microservices-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U geouser -d geodata"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  geoserver:
+    image: docker.osgeo.org/geoserver:2.25.2
+    container_name: users-geoserver
+    environment:
+      GEOSERVER_DATA_DIR: /opt/geoserver_data
+      GEOSERVER_ADMIN_USER: admin
+      GEOSERVER_ADMIN_PASSWORD: geoserver
+    ports:
+      - "8085:8080"
+    volumes:
+      - geoserver-data:/opt/geoserver_data
+    networks:
+      - microservices-network
+    depends_on:
+      geoserver-db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s -o /dev/null -w '%{http_code}' 'http://localhost:8080/geoserver/ows?service=wms&version=1.1.1&request=GetCapabilities' | grep -q 200"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    restart: unless-stopped
+
 networks:
   microservices-network:
     driver: bridge
@@ -252,3 +296,5 @@ volumes:
   rabbitmq-data:
   kafka-data:
   mongodb-data:
+  geoserver-db-data:
+  geoserver-data:
