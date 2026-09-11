@@ -1,0 +1,45 @@
+<div class="layer-panel">
+  <section class="panel-section">
+    <h4 class="panel-heading">Layers</h4>
+    <label class="panel-row">
+      <input
+        type="checkbox"
+        [checked]="showCountries()"
+        (change)="toggleCountries()"
+      />
+      Countries
+    </label>
+    <label class="panel-row">
+      <input
+        type="checkbox"
+        [checked]="showRivers()"
+        (change)="toggleRivers()"
+      />
+      Rivers
+    </label>
+    <label class="panel-row">
+      <input
+        type="checkbox"
+        [checked]="showCities()"
+        (change)="toggleCities()"
+      />
+      Cities
+    </label>
+  </section>
+
+  <section class="panel-section">
+    <h4 class="panel-heading">Legend</h4>
+    <div class="legend-entry">
+      <span class="swatch swatch--countries"></span>
+      <span>Countries</span>
+    </div>
+    <div class="legend-entry">
+      <span class="swatch swatch--rivers"></span>
+      <span>Rivers</span>
+    </div>
+    <div class="legend-entry">
+      <span class="swatch swatch--cities"></span>
+      <span>Cities</span>
+    </div>
+  </section>
+</div>
