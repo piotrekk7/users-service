@@ -253,6 +253,77 @@ docker-compose up --build --force-recreate
 Environment variables can be customized in `docker-compose.yml` or via a `.env` file.
 See `.env.example` for available configuration options.
 
+## Natural Earth Data Import (GeoServer layers)
+
+After starting `geoserver-db` for the first time, run the one-time import script to load
+the three Natural Earth 1:110m datasets into the `geodata` PostGIS database:
+
+```bash
+# 1. Start the spatial database (if not already running)
+docker compose up -d geoserver-db
+
+# 2. Wait until the container is healthy
+docker compose ps geoserver-db   # Status column should show "(healthy)"
+
+# 3. Run the import (downloads ~3 MB, takes ~30 s)
+./scripts/import-geodata.sh
+```
+
+The script:
+- Downloads `ne_110m_admin_0_countries`, `ne_110m_rivers_lake_centerlines`, and
+  `ne_110m_populated_places_simple` from Natural Earth CDN.
+- Installs `gdal-tools` into the container if not already present (needed for `ogr2ogr`).
+- Copies each shapefile into the `users-geoserver-db` container.
+- Uses `ogr2ogr -f PGDUMP | psql` (inside the container) to create and populate tables
+  `countries`, `rivers`, and `cities` in the `public` schema with geometries in EPSG:4326.
+- Prints row counts for each table as a quick sanity check.
+
+### Verify the import
+
+```bash
+docker exec users-geoserver-db psql -U geouser -d geodata -c "
+  SELECT 'countries' AS tbl, count(*) FROM countries
+  UNION ALL
+  SELECT 'rivers',            count(*) FROM rivers
+  UNION ALL
+  SELECT 'cities',            count(*) FROM cities;
+"
+```
+
+Expected output:
+
+```
+   layer   | count
+-----------+-------
+ countries |   177
+ rivers    |    13
+ cities    |   243
+```
+
+> **Note:** The `ERROR: table "X" does not exist` messages on first run are harmless — they come
+> from the `DROP_TABLE=ON` option trying to drop tables that don't exist yet. Subsequent runs
+> are fully clean (drop + recreate).
+>
+> Rivers: 1:110m scale includes only the 13 largest rivers worldwide (Amazon, Nile, Congo…).
+> This is correct for the coarse resolution chosen for this demo.
+
+### Re-running the import
+
+The `shp2pgsql` default mode (`-c`) drops and recreates each table, so the script is
+idempotent — re-running it replaces the data cleanly.
+
+### Connection details (host-side, for psql / pgAdmin / DBeaver)
+
+| Setting  | Value       |
+|----------|-------------|
+| Host     | `localhost` |
+| Port     | `5434`      |
+| Database | `geodata`   |
+| User     | `geouser`   |
+| Password | `geopassword` |
+
+---
+
 ## Development Tips
 
 ### Running services locally (outside Docker)
