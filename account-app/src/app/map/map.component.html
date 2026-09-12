@@ -1,4 +1,9 @@
 <div class="map-wrapper">
   <div #mapContainer class="map-container"></div>
   <app-map-layer-panel />
+  <div #popup class="map-popup">
+    <button class="map-popup__close" (click)="closePopup()">×</button>
+    <strong class="map-popup__city">{{ popupCity() }}</strong>
+    <span class="map-popup__country">{{ popupCountry() }}</span>
+  </div>
 </div>

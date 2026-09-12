@@ -49,6 +49,12 @@ describe('MapLayerPanelComponent', () => {
       checkboxes[1].dispatchEvent(new Event('change'));
       expect(toggleRivers).toHaveBeenCalledOnce();
     });
+
+    it('clicking Cities checkbox calls toggleCities()', () => {
+      const checkboxes = fixture.nativeElement.querySelectorAll('input[type="checkbox"]');
+      checkboxes[2].dispatchEvent(new Event('change'));
+      expect(toggleCities).toHaveBeenCalledOnce();
+    });
   });
 
   describe('legend', () => {
